@@ -4,6 +4,7 @@ import com.example.my_store.utils.exception.dto.ApiError;
 import com.example.my_store.utils.exception.dto.BaseApiError;
 import com.example.my_store.utils.exception.dto.validation.ApiValidationError;
 import com.example.my_store.utils.exception.dto.validation.ApiValidationSubError;
+import com.example.my_store.utils.exception.CommonEntityNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,8 +24,11 @@ public class GlobalErrorHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalErrorHandler.class);
 
     // Обработка ошибки ненайденного ресурса (404 Entity not found Error)
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Object> handleEntityNotFound(EntityNotFoundException ex) {
+    @ExceptionHandler(exception = {
+        CommonEntityNotFoundException.class,
+        ResponseStatusException.class
+    })
+    public ResponseEntity<Object> handleEntityNotFound(Exception ex) {
         log.error("EntityNotFound error: {}", ex.getMessage(), ex);
         BaseApiError error = new BaseApiError(
                 HttpStatus.NOT_FOUND,

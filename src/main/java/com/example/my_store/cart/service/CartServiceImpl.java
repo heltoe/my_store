@@ -1,5 +1,6 @@
 package com.example.my_store.cart.service;
 
+import com.example.my_store.cart.controller.dto.cart.CreateCartDto;
 import com.example.my_store.cart.controller.dto.cart.GetCartDto;
 import com.example.my_store.cart.controller.dto.cart_item.CreateCartItemDto;
 import com.example.my_store.cart.controller.dto.cart_item.UpdateCartItemDto;
@@ -9,15 +10,16 @@ import com.example.my_store.cart.repository.cart_item.CartItemRepository;
 import com.example.my_store.cart.repository.cart_item.entity.CartItemEntity;
 import com.example.my_store.cart.utils.CartEntityMapper;
 import com.example.my_store.cart.utils.CartItemEntityMapper;
+import com.example.my_store.account.repository.AccountRepository;
+import com.example.my_store.account.repository.entity.AccountEntity;
 import com.example.my_store.product.repository.ProductRepository;
 import com.example.my_store.product.repository.entity.ProductEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import com.example.my_store.utils.exception.CommonEntityNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,20 +34,26 @@ public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
 
+    private final AccountRepository accountRepository;
+
     private final ProductRepository productRepository;
 
     private final CartItemRepository cartItemRepository;
 
-    public CartEntity _getOneCart(Long id) {
-        return cartRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart with id `%s` not found".formatted(id)));
+    private CartEntity getRequiredCart(Long id) {
+        return cartRepository.findById(id).orElseThrow(() -> new CommonEntityNotFoundException("Cart with id `%s` not found".formatted(id)));
     }
 
-    private CartItemEntity _getOneCartItem(Long id) {
-        return cartItemRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart item with id `%s` not found".formatted(id)));
+    private AccountEntity getRequiredAccount(Long id) {
+        return accountRepository.findById(id).orElseThrow(() -> new CommonEntityNotFoundException("Account with id `%s` not found".formatted(id)));
     }
 
-    private ProductEntity _getOneProduct(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with id `%s` not found".formatted(id)));
+    private CartItemEntity getRequiredCartItem(Long id) {
+        return cartItemRepository.findById(id).orElseThrow(() -> new CommonEntityNotFoundException("Cart item with id `%s` not found".formatted(id)));
+    }
+
+    private ProductEntity getRequiredProduct(Long id) {
+        return productRepository.findById(id).orElseThrow(() -> new CommonEntityNotFoundException("Product with id `%s` not found".formatted(id)));
     }
 
     @Override
@@ -56,7 +64,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public GetCartDto getOne(Long id) {
-        CartEntity entity = _getOneCart(id);
+        CartEntity entity = getRequiredCart(id);
         return cartEntityMapper.convertToGetCartDto(entity);
     }
 
@@ -69,8 +77,12 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public GetCartDto create(GetCartDto dto) {
-        CartEntity cartEntity = cartEntityMapper.convertToEntity(dto);
+    public GetCartDto create(CreateCartDto dto) {
+        AccountEntity account = getRequiredAccount(dto.account_id());
+
+        CartEntity cartEntity = new CartEntity();
+        cartEntity.setAccount(account);
+
         CartEntity resultCartEntity = cartRepository.save(cartEntity);
         return cartEntityMapper.convertToGetCartDto(resultCartEntity);
     }
@@ -81,28 +93,35 @@ public class CartServiceImpl implements CartService {
         /**
          * Ищем имеется ли такой продукт
          */
-        _getOneProduct(dto.product_id());
+        ProductEntity productEntity = getRequiredProduct(dto.product_id());
         /**
          * Проверяем есть ли такой продукт уже в корзине
          */
-        CartEntity cartEntity = _getOneCart(dto.cart_id());
-        Optional<CartItemEntity> findCartItemEntity = cartEntity.getProducts().stream().filter(item -> item.getProduct().getId().equals(dto.product_id())).findFirst();
-        if (findCartItemEntity.isPresent()) {
-            CartItemEntity cartItem = findCartItemEntity.get();
-            cartItem.setQuantity(dto.quantity());
-            cartEntity.getProducts().add(cartItem);
+        CartEntity cartEntity = getRequiredCart(dto.cart_id());
+        /**
+         * Ищем продукт в корзине
+         */
+        Optional<CartItemEntity> existingItem = cartEntity.getProducts().stream()
+            .filter(item -> item.getProduct().getId().equals(productEntity.getId()))
+            .findFirst();
+
+        if (existingItem.isPresent()) {
+            CartItemEntity cartItem = existingItem.get();
+            cartItem.setQuantity(cartItem.getQuantity() + dto.quantity());
             cartItemRepository.save(cartItem);
         } else {
-            CartItemEntity mappedEntity = cartItemEntityMapper.convertToEntity(dto);
-            CartItemEntity resultEntity = cartItemRepository.save(mappedEntity);
-            cartItemRepository.save(resultEntity);
+            CartItemEntity cartItem = new CartItemEntity();
+            cartItem.setCart(cartEntity);
+            cartItem.setProduct(productEntity);
+            cartItem.setQuantity(dto.quantity());
+            cartItemRepository.save(cartItem);
         }
     }
 
     @Transactional
     @Override
     public void changeQuantity(UpdateCartItemDto dto) {
-        CartItemEntity cartItemEntity = _getOneCartItem(dto.id());
+        CartItemEntity cartItemEntity = getRequiredCartItem(dto.id());
         Integer zeroQuantity = 0;
         /**
          * Проверка на случай когда прилетит quantity == 0
@@ -117,10 +136,8 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void removeFromCart(Long id) {
-        CartItemEntity entity = _getOneCartItem(id);
-        if (entity != null) {
-            cartItemRepository.delete(entity);
-        }
+        CartItemEntity entity = getRequiredCartItem(id);
+        cartItemRepository.delete(entity);
     }
 
     @Override

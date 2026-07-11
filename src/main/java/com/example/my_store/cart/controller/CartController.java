@@ -3,7 +3,9 @@ package com.example.my_store.cart.controller;
 import com.example.my_store.cart.controller.dto.cart.GetCartDto;
 import com.example.my_store.cart.controller.dto.cart_item.CreateCartItemDto;
 import com.example.my_store.cart.controller.dto.cart_item.UpdateCartItemDto;
+import com.example.my_store.cart.controller.dto.cart.CreateCartDto;
 import com.example.my_store.cart.service.CartService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -41,19 +43,19 @@ public class CartController {
     }
 
     @PostMapping
-    public ResponseEntity<GetCartDto> create(@RequestBody GetCartDto dto) {
+    public ResponseEntity<GetCartDto> create(@RequestBody @Valid CreateCartDto dto) {
         var entity = cartService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(entity);
     }
 
     @PostMapping("/add")
-    public ResponseEntity<GetCartDto> addToCart(@RequestBody CreateCartItemDto dto) {
+    public ResponseEntity<GetCartDto> addToCart(@RequestBody @Valid CreateCartItemDto dto) {
         cartService.addToCart(dto);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/change-quantity")
-    public ResponseEntity<GetCartDto> changeQuantity(@RequestBody UpdateCartItemDto dto) {
+    public ResponseEntity<GetCartDto> changeQuantity(@RequestBody @Valid UpdateCartItemDto dto) {
         cartService.changeQuantity(dto);
         return ResponseEntity.noContent().build();
     }

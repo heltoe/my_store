@@ -13,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -44,6 +45,9 @@ class AccountControllerTest {
 
     @MockitoBean
     private AccountService accountService;
+
+    @MockitoBean
+    private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
     private static GetAccountDto sampleGetAccountDto() {
         return new GetAccountDto(
@@ -84,10 +88,12 @@ class AccountControllerTest {
         @Test
         @DisplayName("возвращает 200 и постраничное тело")
         void getAll_returnsOkAndPagedBody() throws Exception {
+            // Arrange: сервис возвращает страницу с одним аккаунтом.
             GetAccountDto dto = sampleGetAccountDto();
             when(accountService.getAll(any(AccountEntityFilter.class), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of(dto)));
 
+            // Act + Assert: выполняем GET-запрос и проверяем HTTP-статус и тело ответа.
             mockMvc.perform(get("/rest/accounts")
                             .param("page", "0")
                             .param("size", "10"))
@@ -99,15 +105,18 @@ class AccountControllerTest {
         @Test
         @DisplayName("делегирует вызов в сервис")
         void getAll_delegatesToService() throws Exception {
+            // Arrange: сервис возвращает корректный ответ для списка аккаунтов.
             when(accountService.getAll(any(AccountEntityFilter.class), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of(sampleGetAccountDto())));
 
+            // Act: выполняем GET-запрос с фильтром и параметрами пагинации.
             mockMvc.perform(get("/rest/accounts")
                             .param("phoneNumberContains", "925")
                             .param("page", "0")
                             .param("size", "10"))
                     .andExpect(status().isOk());
 
+            // Assert: контроллер делегировал обработку в service-слой.
             verify(accountService).getAll(any(AccountEntityFilter.class), any(Pageable.class));
         }
     }
@@ -119,8 +128,10 @@ class AccountControllerTest {
         @Test
         @DisplayName("возвращает 200 и тело аккаунта")
         void getOne_returnsOkWithBody() throws Exception {
+            // Arrange: сервис возвращает аккаунт по id.
             when(accountService.getOne(ACCOUNT_ID)).thenReturn(sampleGetAccountDto());
 
+            // Act + Assert: выполняем GET-запрос и проверяем тело ответа.
             mockMvc.perform(get("/rest/accounts/{id}", ACCOUNT_ID))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(ACCOUNT_ID))
@@ -130,11 +141,14 @@ class AccountControllerTest {
         @Test
         @DisplayName("делегирует вызов в сервис")
         void getOne_delegatesToService() throws Exception {
+            // Arrange: сервис возвращает аккаунт по id.
             when(accountService.getOne(ACCOUNT_ID)).thenReturn(sampleGetAccountDto());
 
+            // Act: выполняем GET-запрос по id.
             mockMvc.perform(get("/rest/accounts/{id}", ACCOUNT_ID))
                     .andExpect(status().isOk());
 
+            // Assert: контроллер вызвал нужный метод сервиса.
             verify(accountService).getOne(ACCOUNT_ID);
         }
     }
@@ -146,8 +160,10 @@ class AccountControllerTest {
         @Test
         @DisplayName("возвращает 200 и список аккаунтов")
         void getMany_returnsOkWithList() throws Exception {
+            // Arrange: сервис возвращает список аккаунтов по id.
             when(accountService.getMany(List.of(1L, 2L))).thenReturn(List.of(sampleGetAccountDto()));
 
+            // Act + Assert: выполняем GET-запрос и проверяем список в ответе.
             mockMvc.perform(get("/rest/accounts/by-ids")
                             .param("ids", "1", "2"))
                     .andExpect(status().isOk())
@@ -157,12 +173,15 @@ class AccountControllerTest {
         @Test
         @DisplayName("делегирует вызов в сервис")
         void getMany_delegatesToService() throws Exception {
+            // Arrange: сервис возвращает список аккаунтов по id.
             when(accountService.getMany(List.of(1L, 2L))).thenReturn(List.of(sampleGetAccountDto()));
 
+            // Act: выполняем GET-запрос со списком id.
             mockMvc.perform(get("/rest/accounts/by-ids")
                             .param("ids", "1", "2"))
                     .andExpect(status().isOk());
 
+            // Assert: контроллер передал список id в service-слой.
             verify(accountService).getMany(List.of(1L, 2L));
         }
     }
@@ -174,8 +193,10 @@ class AccountControllerTest {
         @Test
         @DisplayName("возвращает 201 и созданный аккаунт")
         void create_returnsCreatedWithBody() throws Exception {
+            // Arrange: сервис возвращает созданный аккаунт.
             when(accountService.create(any(CreateOrUpdateAccountDto.class))).thenReturn(sampleGetAccountDto());
 
+            // Act + Assert: отправляем валидный POST-запрос и проверяем ответ.
             mockMvc.perform(post("/rest/accounts")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(validAccountJson()))
@@ -187,19 +208,23 @@ class AccountControllerTest {
         @Test
         @DisplayName("делегирует вызов в сервис")
         void create_delegatesToService() throws Exception {
+            // Arrange: сервис возвращает созданный аккаунт.
             when(accountService.create(any(CreateOrUpdateAccountDto.class))).thenReturn(sampleGetAccountDto());
 
+            // Act: отправляем валидный POST-запрос.
             mockMvc.perform(post("/rest/accounts")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(validAccountJson()))
                     .andExpect(status().isCreated());
 
+            // Assert: контроллер передал DTO в service-слой.
             verify(accountService).create(any(CreateOrUpdateAccountDto.class));
         }
 
         @Test
         @DisplayName("возвращает 400 при невалидном теле запроса")
         void create_withInvalidBody_returnsBadRequest() throws Exception {
+            // Act + Assert: отправляем невалидный POST-запрос и проверяем ошибку валидации.
             mockMvc.perform(post("/rest/accounts")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(invalidAccountJson()))
@@ -207,6 +232,7 @@ class AccountControllerTest {
                     .andExpect(jsonPath("$.subErrors").isArray())
                     .andExpect(jsonPath("$.subErrors[0].field").value("phoneNumber"));
 
+            // Assert: при ошибке валидации service-слой не вызывается.
             verify(accountService, never()).create(any());
         }
     }
@@ -218,9 +244,11 @@ class AccountControllerTest {
         @Test
         @DisplayName("возвращает 200 и обновлённый аккаунт")
         void patch_returnsOkWithBody() throws Exception {
+            // Arrange: сервис возвращает обновленный аккаунт.
             when(accountService.put(eq(ACCOUNT_ID), any(CreateOrUpdateAccountDto.class)))
                     .thenReturn(sampleGetAccountDto());
 
+            // Act + Assert: отправляем валидный PUT-запрос и проверяем ответ.
             mockMvc.perform(put("/rest/accounts/{id}", ACCOUNT_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(validAccountJson()))
@@ -231,20 +259,24 @@ class AccountControllerTest {
         @Test
         @DisplayName("делегирует вызов в сервис")
         void patch_delegatesToService() throws Exception {
+            // Arrange: сервис возвращает обновленный аккаунт.
             when(accountService.put(eq(ACCOUNT_ID), any(CreateOrUpdateAccountDto.class)))
                     .thenReturn(sampleGetAccountDto());
 
+            // Act: отправляем валидный PUT-запрос.
             mockMvc.perform(put("/rest/accounts/{id}", ACCOUNT_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(validAccountJson()))
                     .andExpect(status().isOk());
 
+            // Assert: контроллер передал id и DTO в service-слой.
             verify(accountService).put(eq(ACCOUNT_ID), any(CreateOrUpdateAccountDto.class));
         }
 
         @Test
         @DisplayName("возвращает 400 при невалидном теле запроса")
         void patch_withInvalidBody_returnsBadRequest() throws Exception {
+            // Act + Assert: отправляем невалидный PUT-запрос и проверяем ошибку валидации.
             mockMvc.perform(put("/rest/accounts/{id}", ACCOUNT_ID)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(invalidAccountJson()))
@@ -252,6 +284,7 @@ class AccountControllerTest {
                     .andExpect(jsonPath("$.subErrors").isArray())
                     .andExpect(jsonPath("$.subErrors[0].field").value("phoneNumber"));
 
+            // Assert: при ошибке валидации service-слой не вызывается.
             verify(accountService, never()).put(any(), any());
         }
     }
@@ -263,6 +296,7 @@ class AccountControllerTest {
         @Test
         @DisplayName("возвращает 204")
         void delete_returnsNoContent() throws Exception {
+            // Act + Assert: выполняем DELETE-запрос и проверяем статус без тела.
             mockMvc.perform(delete("/rest/accounts/{id}", ACCOUNT_ID))
                     .andExpect(status().isNoContent());
         }
@@ -270,9 +304,11 @@ class AccountControllerTest {
         @Test
         @DisplayName("делегирует вызов в сервис")
         void delete_delegatesToService() throws Exception {
+            // Act: выполняем DELETE-запрос по id.
             mockMvc.perform(delete("/rest/accounts/{id}", ACCOUNT_ID))
                     .andExpect(status().isNoContent());
 
+            // Assert: контроллер передал id в service-слой.
             verify(accountService).delete(ACCOUNT_ID);
         }
     }
@@ -284,6 +320,7 @@ class AccountControllerTest {
         @Test
         @DisplayName("возвращает 204")
         void deleteMany_returnsNoContent() throws Exception {
+            // Act + Assert: выполняем DELETE-запрос со списком id и проверяем статус.
             mockMvc.perform(delete("/rest/accounts")
                             .param("ids", "1", "2"))
                     .andExpect(status().isNoContent());
@@ -292,10 +329,12 @@ class AccountControllerTest {
         @Test
         @DisplayName("делегирует вызов в сервис")
         void deleteMany_delegatesToService() throws Exception {
+            // Act: выполняем DELETE-запрос со списком id.
             mockMvc.perform(delete("/rest/accounts")
                             .param("ids", "1", "2"))
                     .andExpect(status().isNoContent());
 
+            // Assert: контроллер передал список id в service-слой.
             verify(accountService).deleteMany(List.of(1L, 2L));
         }
     }

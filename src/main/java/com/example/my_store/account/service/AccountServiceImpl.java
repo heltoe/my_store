@@ -10,9 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import com.example.my_store.utils.exception.CommonEntityNotFoundException;
 
 import java.util.List;
 
@@ -24,9 +23,9 @@ public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
 
-    public AccountEntity _getOne(Long id) {
+    private AccountEntity getRequiredAccount(Long id) {
         return accountRepository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity with id `%s` not found".formatted(id)));
+                new CommonEntityNotFoundException("Entity with id `%s` not found".formatted(id)));
     }
 
     @Override
@@ -38,7 +37,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public GetAccountDto getOne(Long id) {
-        AccountEntity accountEntity = _getOne(id);
+        AccountEntity accountEntity = getRequiredAccount(id);
         return accountEntityMapper.convertToGetAccountDto(accountEntity);
     }
 
@@ -59,7 +58,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public GetAccountDto put(Long id, CreateOrUpdateAccountDto dto) {
-        AccountEntity accountEntity = _getOne(id);
+        AccountEntity accountEntity = getRequiredAccount(id);
 
         accountEntityMapper.updateWithNull(dto, accountEntity);
 
@@ -69,10 +68,8 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void delete(Long id) {
-        AccountEntity accountEntity = _getOne(id);
-        if (accountEntity != null) {
-            accountRepository.delete(accountEntity);
-        }
+        AccountEntity accountEntity = getRequiredAccount(id);
+        accountRepository.delete(accountEntity);
     }
 
     @Override
