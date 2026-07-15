@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.example.my_store.utils.exception.CommonEntityNotFoundException;
+import com.example.my_store.utils.exception.CommonConflictException;
 
 import java.util.List;
 
@@ -26,6 +27,18 @@ public class AccountServiceImpl implements AccountService {
     private AccountEntity getRequiredAccount(Long id) {
         return accountRepository.findById(id).orElseThrow(() ->
                 new CommonEntityNotFoundException("Entity with id `%s` not found".formatted(id)));
+    }
+
+    private void throwIfPhoneNumberExists(String phoneNumber) {
+        if (accountRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new CommonConflictException("Entity with phone number `%s` already exists".formatted(phoneNumber));
+        }
+    }
+
+    private void throwIfPhoneNumberExistsForAnotherAccount(String phoneNumber, Long id) {
+        if (accountRepository.existsByPhoneNumberAndIdNot(phoneNumber, id)) {
+            throw new CommonConflictException("Entity with phone number `%s` already exists".formatted(phoneNumber));
+        }
     }
 
     @Override
@@ -51,6 +64,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public GetAccountDto create(CreateOrUpdateAccountDto dto) {
+        throwIfPhoneNumberExists(dto.phoneNumber());
         AccountEntity accountEntity = accountEntityMapper.convertToEntity(dto);
         AccountEntity resultAccountEntity = accountRepository.save(accountEntity);
         return accountEntityMapper.convertToGetAccountDto(resultAccountEntity);
@@ -60,6 +74,7 @@ public class AccountServiceImpl implements AccountService {
     public GetAccountDto put(Long id, CreateOrUpdateAccountDto dto) {
         AccountEntity accountEntity = getRequiredAccount(id);
 
+        throwIfPhoneNumberExistsForAnotherAccount(dto.phoneNumber(), id);
         accountEntityMapper.updateWithNull(dto, accountEntity);
 
         AccountEntity resultAccountEntity = accountRepository.save(accountEntity);

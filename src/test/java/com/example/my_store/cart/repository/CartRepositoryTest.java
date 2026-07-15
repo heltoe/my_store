@@ -162,9 +162,11 @@ class CartRepositoryTest {
     private static ProductEntity product() {
         ProductEntity product = new ProductEntity();
         product.setName("Ноутбук");
+        product.setNormalizedName("ноутбук");
         product.setDescription("Игровой ноутбук");
         product.setPrice(100_000.0);
         product.setQuantity(5);
+        product.setIsActive(true);
         return product;
     }
 

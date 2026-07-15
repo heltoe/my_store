@@ -1,12 +1,10 @@
 package com.example.my_store.payment.service;
 
-import com.example.my_store.payment.controller.dto.CreateOrUpdatePaymentDto;
+import com.example.my_store.payment.controller.dto.CreatePaymentDto;
 import com.example.my_store.payment.controller.dto.GetPaymentDto;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.io.IOException;
 import java.util.List;
 
 public interface PaymentService {
@@ -14,9 +12,13 @@ public interface PaymentService {
 
     GetPaymentDto getOne(Long id);
 
+    GetPaymentDto getByOrderId(Long orderId);
+
     List<GetPaymentDto> getMany(List<Long> ids);
 
-    GetPaymentDto create(CreateOrUpdatePaymentDto dto);
+    GetPaymentDto create(CreatePaymentDto dto);
 
-    GetPaymentDto patch(Long id);
+    GetPaymentDto markSuccess(Long id);
+
+    GetPaymentDto markFailure(Long id);
 }

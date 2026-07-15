@@ -17,7 +17,7 @@ public class PaymentEntity extends DateAudit {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", nullable = false, unique = true)
     private OrderEntity order;
 
     @Enumerated(EnumType.STRING)

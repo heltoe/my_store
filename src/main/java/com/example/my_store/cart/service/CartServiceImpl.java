@@ -12,8 +12,8 @@ import com.example.my_store.cart.utils.CartEntityMapper;
 import com.example.my_store.cart.utils.CartItemEntityMapper;
 import com.example.my_store.account.repository.AccountRepository;
 import com.example.my_store.account.repository.entity.AccountEntity;
-import com.example.my_store.product.repository.ProductRepository;
 import com.example.my_store.product.repository.entity.ProductEntity;
+import com.example.my_store.product.service.ProductService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,7 +36,7 @@ public class CartServiceImpl implements CartService {
 
     private final AccountRepository accountRepository;
 
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
     private final CartItemRepository cartItemRepository;
 
@@ -50,10 +50,6 @@ public class CartServiceImpl implements CartService {
 
     private CartItemEntity getRequiredCartItem(Long id) {
         return cartItemRepository.findById(id).orElseThrow(() -> new CommonEntityNotFoundException("Cart item with id `%s` not found".formatted(id)));
-    }
-
-    private ProductEntity getRequiredProduct(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new CommonEntityNotFoundException("Product with id `%s` not found".formatted(id)));
     }
 
     @Override
@@ -93,7 +89,7 @@ public class CartServiceImpl implements CartService {
         /**
          * Ищем имеется ли такой продукт
          */
-        ProductEntity productEntity = getRequiredProduct(dto.product_id());
+        ProductEntity productEntity = productService.getRequiredActiveProduct(dto.product_id());
         /**
          * Проверяем есть ли такой продукт уже в корзине
          */
@@ -129,6 +125,7 @@ public class CartServiceImpl implements CartService {
         if (dto.quantity().equals(zeroQuantity)) {
             cartItemRepository.delete(cartItemEntity);
         } else {
+            productService.requireActiveProduct(cartItemEntity.getProduct());
             CartItemEntity mappedEntity = cartItemEntityMapper.updateWithNull(dto, cartItemEntity);
             cartItemRepository.save(mappedEntity);
         }

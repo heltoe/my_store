@@ -26,4 +26,7 @@ public class CourierEntity extends DateAudit {
 
     @Column(name = "phone_number", nullable = false, unique = true)
     private String phoneNumber;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
 }

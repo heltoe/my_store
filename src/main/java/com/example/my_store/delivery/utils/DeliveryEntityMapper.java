@@ -14,9 +14,11 @@ public interface DeliveryEntityMapper {
     @Mapping(source = "orderId", target = "order.id")
     DeliveryEntity convertToEntity(GetDeliveryDto getDeliveryDto);
 
-    @InheritInverseConfiguration(name = "toEntity")
+    @Mapping(source = "courier.id", target = "courierId")
+    @Mapping(source = "order.id", target = "orderId")
     GetDeliveryDto convertToGetDeliveryDto(DeliveryEntity deliveryEntity);
 
+    @Mapping(target = "order", ignore = true)
     @Mapping(source = "courierId", target = "courier")
     DeliveryEntity updateWithNull(UpdateDeliveryDto updateDeliveryDto, @MappingTarget DeliveryEntity deliveryEntity);
 
@@ -41,7 +43,4 @@ public interface DeliveryEntityMapper {
     @Mapping(source = "courierId", target = "courier.id")
     @Mapping(source = "orderId", target = "order.id")
     DeliveryEntity convertToEntity(CreateDeliveryDto createDeliveryDto);
-
-    @InheritInverseConfiguration(name = "toEntity")
-    CreateDeliveryDto convertToCreateDeliveryDto(DeliveryEntity deliveryEntity);
 }

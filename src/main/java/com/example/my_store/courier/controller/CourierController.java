@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -40,26 +41,26 @@ public class CourierController {
     }
 
     @PostMapping
-    public ResponseEntity<GetCourierDto> create(@RequestBody CreateUpdateCourierDto dto) {
+    public ResponseEntity<GetCourierDto> create(@RequestBody @Valid CreateUpdateCourierDto dto) {
         var result = courierService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<GetCourierDto> patch(@PathVariable Long id, @RequestBody CreateUpdateCourierDto dto) {
+    @PutMapping("/{id}")
+    public ResponseEntity<GetCourierDto> patch(@PathVariable Long id, @RequestBody @Valid CreateUpdateCourierDto dto) {
         var result = courierService.patch(id, dto);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        courierService.delete(id);
+    @PostMapping("/{id}/set-inactive")
+    public ResponseEntity<Void> setInactiveCourier(@PathVariable Long id) {
+        courierService.setInactiveCourier(id);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deleteMany(@RequestParam List<Long> ids) {
-        courierService.deleteMany(ids);
+    @PostMapping("/{id}/set-active")
+    public ResponseEntity<Void> setActiveCourier(@PathVariable Long id) {
+        courierService.setActiveCourier(id);
         return ResponseEntity.noContent().build();
     }
 }

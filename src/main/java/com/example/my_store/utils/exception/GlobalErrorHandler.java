@@ -4,8 +4,6 @@ import com.example.my_store.utils.exception.dto.ApiError;
 import com.example.my_store.utils.exception.dto.BaseApiError;
 import com.example.my_store.utils.exception.dto.validation.ApiValidationError;
 import com.example.my_store.utils.exception.dto.validation.ApiValidationSubError;
-import com.example.my_store.utils.exception.CommonEntityNotFoundException;
-import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -14,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,35 +20,43 @@ import java.util.stream.Collectors;
 public class GlobalErrorHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalErrorHandler.class);
 
-    // Обработка ошибки ненайденного ресурса (404 Entity not found Error)
-    @ExceptionHandler(exception = {
-        CommonEntityNotFoundException.class,
-        ResponseStatusException.class
-    })
-    public ResponseEntity<Object> handleEntityNotFound(Exception ex) {
-        log.error("EntityNotFound error: {}", ex.getMessage(), ex);
+    private ResponseEntity<Object> buildResponseEntity(Exception ex, HttpStatus status, String customMessageError, String logTitle) {
+        log.error(logTitle, ex.getMessage(), ex);
         BaseApiError error = new BaseApiError(
-                HttpStatus.NOT_FOUND,
-                "Entity not found",
+                status,
+                customMessageError,
                 ex.getMessage()
         );
         return buildResponseEntity(error);
     }
 
+    // Обработка ошибки ненайденного ресурса (404 Entity not found Error)
+    @ExceptionHandler(CommonEntityNotFoundException.class)
+    public ResponseEntity<Object> handleEntityNotFound(Exception ex) {
+        return buildResponseEntity(ex, HttpStatus.NOT_FOUND, "Entity not found", "EntityNotFound error");
+    }
+
+        // Обработка ошибки ненайденного ресурса (409 Conflict Error)
+    @ExceptionHandler(CommonConflictException.class)
+    public ResponseEntity<Object> handleConflict(Exception ex) {
+        return buildResponseEntity(ex, HttpStatus.CONFLICT, "Conflict error", "Conflict error");
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Object> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        if (isDuplicateProductNameViolation(ex)) {
+            return buildResponseEntity(ex, HttpStatus.CONFLICT, "Conflict error", "Conflict error");
+        }
+        return buildResponseEntity(ex, HttpStatus.BAD_REQUEST, "Bad request", "Validation error");
+    }
+
     // Обработка клиентских ошибок (400 Bad request Error)
     @ExceptionHandler(exception = {
             IllegalArgumentException.class,
-            IllegalStateException.class,
-            DataIntegrityViolationException.class
+            IllegalStateException.class
     })
     public ResponseEntity<Object> handleBadRequest(Exception ex) {
-        log.error("Validation error: {}", ex.getMessage(), ex);
-        BaseApiError error = new BaseApiError(
-                HttpStatus.BAD_REQUEST,
-                "Bad request",
-                ex.getMessage()
-        );
-        return buildResponseEntity(error);
+        return buildResponseEntity(ex, HttpStatus.BAD_REQUEST, "Bad request", "Validation error");
     }
 
     // Обработка клиентских ошибок (400 Bad request Error)
@@ -71,16 +76,19 @@ public class GlobalErrorHandler {
     // Обработка всех остальных ошибок (500 Internal Server Error)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleAllExceptions(Exception ex) {
-        log.error("Internal error: {}", ex.getMessage(), ex);
-        BaseApiError error = new BaseApiError(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Internal Server Error",
-                "Произошла непредвиденная ошибка. Обратитесь в поддержку."
-        );
-        return buildResponseEntity(error);
+        return buildResponseEntity(ex, HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "Internal error");
     }
 
     private ResponseEntity<Object> buildResponseEntity(ApiError error) {
         return ResponseEntity.status(error.getStatusCode()).body(error);
+    }
+
+    private boolean isDuplicateProductNameViolation(DataIntegrityViolationException ex) {
+        Throwable cause = ex.getMostSpecificCause();
+        if (cause == null || cause.getMessage() == null) {
+            return false;
+        }
+        String message = cause.getMessage().toLowerCase();
+        return message.contains("normalized_name");
     }
 }

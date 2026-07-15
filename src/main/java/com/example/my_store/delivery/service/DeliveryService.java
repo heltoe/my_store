@@ -21,6 +21,4 @@ public interface DeliveryService {
     GetDeliveryDto patch(Long id, UpdateDeliveryDto dto);
 
     void delete(Long id);
-
-    void deleteMany(List<Long> ids);
 }

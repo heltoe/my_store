@@ -1,6 +1,6 @@
 package com.example.my_store.product.controller;
 
-import com.example.my_store.product.controller.dto.CreateOrUdpateProductDto;
+import com.example.my_store.product.controller.dto.CreateOrUpdateProductDto;
 import com.example.my_store.product.controller.dto.GetProductDto;
 import com.example.my_store.product.utils.ProductEntityFilter;
 import com.example.my_store.product.service.ProductService;
@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -41,26 +42,26 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<GetProductDto> create(@RequestBody CreateOrUdpateProductDto dto) {
+    public ResponseEntity<GetProductDto> create(@RequestBody @Valid CreateOrUpdateProductDto dto) {
         var entity = productService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(entity);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<GetProductDto> put(@PathVariable Long id, @RequestBody CreateOrUdpateProductDto dto) {
+    public ResponseEntity<GetProductDto> put(@PathVariable Long id, @RequestBody @Valid CreateOrUpdateProductDto dto) {
         var entity = productService.put(id, dto);
         return ResponseEntity.status(HttpStatus.OK).body(entity);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        productService.delete(id);
+    @PostMapping("/{id}/set-inactive")
+    public ResponseEntity<Void> setInactiveProduct(@PathVariable Long id) {
+        productService.setInactiveProduct(id);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deleteMany(@RequestParam List<Long> ids) {
-        productService.deleteMany(ids);
+    @PostMapping("/{id}/set-active")
+    public ResponseEntity<Void> setActiveProduct(@PathVariable Long id) {
+        productService.setActiveProduct(id);
         return ResponseEntity.noContent().build();
     }
 }

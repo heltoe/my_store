@@ -6,5 +6,5 @@ import jakarta.validation.constraints.NotNull;
 /**
  * DTO for {@link PaymentEntity}
  */
-public record CreateOrUpdatePaymentDto(@NotNull(message = "Поле обязательно к заполнению") Long id) {
+public record CreatePaymentDto(@NotNull(message = "Поле обязательно к заполнению") Long orderId) {
 }

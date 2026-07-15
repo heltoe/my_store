@@ -13,7 +13,7 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -42,13 +42,13 @@ public class DeliveryController {
     }
 
     @PostMapping
-    public ResponseEntity<GetDeliveryDto> create(@RequestBody CreateDeliveryDto dto) {
+    public ResponseEntity<GetDeliveryDto> create(@RequestBody @Valid CreateDeliveryDto dto) {
         var result =  deliveryService.create(dto);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<GetDeliveryDto> patch(@PathVariable Long id, @RequestBody UpdateDeliveryDto dto) {
+    public ResponseEntity<GetDeliveryDto> patch(@PathVariable Long id, @RequestBody @Valid UpdateDeliveryDto dto) {
         var result = deliveryService.patch(id, dto);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
@@ -56,12 +56,6 @@ public class DeliveryController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deliveryService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping
-    public ResponseEntity<Void> deleteMany(@RequestParam List<Long> ids) {
-        deliveryService.deleteMany(ids);
         return ResponseEntity.noContent().build();
     }
 }

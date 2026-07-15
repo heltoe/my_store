@@ -5,12 +5,14 @@ import com.example.my_store.courier.controller.dto.GetCourierDto;
 import com.example.my_store.courier.repository.CourierRepository;
 import com.example.my_store.courier.repository.entity.CourierEntity;
 import com.example.my_store.courier.utils.CourierEntityMapper;
+import com.example.my_store.delivery.repository.DeliveryRepository;
+import com.example.my_store.order.repository.order.entity.STATE_ORDER;
+import com.example.my_store.utils.exception.CommonEntityNotFoundException;
+import com.example.my_store.utils.exception.CommonConflictException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -22,8 +24,28 @@ public class CourierServiceImpl implements CourierService {
 
     private final CourierRepository courierRepository;
 
-    private CourierEntity _getOne(Long id) {
-        return  courierRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity with id `%s` not found".formatted(id)));
+    private final DeliveryRepository deliveryRepository;
+
+    private CourierEntity getRequiredCourier(Long id) {
+        return  courierRepository.findById(id).orElseThrow(() -> new CommonEntityNotFoundException("Courier with id `%s` not found".formatted(id)));
+    }
+
+    private void throwIfPhoneNumberExists(String phoneNumber) {
+        if (courierRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new CommonConflictException("Entity with phone number `%s` already exists".formatted(phoneNumber));
+        }
+    }
+
+    private void throwIfPhoneNumberExistsForAnotherCourier(String phoneNumber, Long id) {
+        if (courierRepository.existsByPhoneNumberAndIdNot(phoneNumber, id)) {
+            throw new CommonConflictException("Entity with phone number `%s` already exists".formatted(phoneNumber));
+        }
+    }
+
+    private void throwIfCourierHasDeliveryOnTheWay(Long id) {
+        if (deliveryRepository.existsByCourier_IdAndOrder_Status(id, STATE_ORDER.DELIVERY_ON_THE_WAY)) {
+            throw new CommonConflictException("Courier has delivery on the way");
+        }
     }
 
     @Override
@@ -34,7 +56,7 @@ public class CourierServiceImpl implements CourierService {
 
     @Override
     public GetCourierDto getOne(Long id) {
-        CourierEntity entity = _getOne(id);
+        CourierEntity entity = getRequiredCourier(id);
         return courierEntityMapper.convertToGetCourierDto(entity);
     }
 
@@ -48,15 +70,18 @@ public class CourierServiceImpl implements CourierService {
 
     @Override
     public GetCourierDto create(CreateUpdateCourierDto dto) {
+        throwIfPhoneNumberExists(dto.phoneNumber());
         CourierEntity courierEntity = courierEntityMapper.convertToEntity(dto);
+        courierEntity.setIsActive(true);
         CourierEntity resultCourierEntity = courierRepository.save(courierEntity);
         return courierEntityMapper.convertToGetCourierDto(resultCourierEntity);
     }
 
     @Override
     public GetCourierDto patch(Long id, CreateUpdateCourierDto dto) {
-        CourierEntity entity = _getOne(id);
+        CourierEntity entity = getRequiredCourier(id);
 
+        throwIfPhoneNumberExistsForAnotherCourier(dto.phoneNumber(), id);
         courierEntityMapper.updateWithNull(dto, entity);
 
         CourierEntity resultCourierEntity = courierRepository.save(entity);
@@ -64,15 +89,17 @@ public class CourierServiceImpl implements CourierService {
     }
 
     @Override
-    public void delete(Long id) {
-        CourierEntity entity = _getOne(id);
-        if (entity != null) {
-            courierRepository.delete(entity);
-        }
+    public void setInactiveCourier(Long id) {
+        CourierEntity courier = getRequiredCourier(id);
+        throwIfCourierHasDeliveryOnTheWay(id);
+        courier.setIsActive(false);
+        courierRepository.save(courier);
     }
 
     @Override
-    public void deleteMany(List<Long> ids) {
-        courierRepository.deleteAllById(ids);
+    public void setActiveCourier(Long id) {
+        CourierEntity courier = getRequiredCourier(id);
+        courier.setIsActive(true);
+        courierRepository.save(courier);
     }
 }

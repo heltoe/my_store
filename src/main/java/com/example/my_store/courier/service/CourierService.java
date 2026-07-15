@@ -2,11 +2,9 @@ package com.example.my_store.courier.service;
 
 import com.example.my_store.courier.controller.dto.CreateUpdateCourierDto;
 import com.example.my_store.courier.controller.dto.GetCourierDto;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.io.IOException;
 import java.util.List;
 
 public interface CourierService {
@@ -20,7 +18,7 @@ public interface CourierService {
 
     GetCourierDto patch(Long id, CreateUpdateCourierDto dto);
 
-    void delete(Long id);
+    void setInactiveCourier(Long id);
 
-    void deleteMany(List<Long> ids);
+    void setActiveCourier(Long id);
 }

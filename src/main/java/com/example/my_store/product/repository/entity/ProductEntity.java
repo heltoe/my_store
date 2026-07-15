@@ -15,8 +15,11 @@ public class ProductEntity extends DateAudit {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "name", unique = true, nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "normalized_name", nullable = false, unique = true)
+    private String normalizedName;
 
     @Column(name = "description", nullable = false)
     private String description;
@@ -26,4 +29,7 @@ public class ProductEntity extends DateAudit {
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
 }

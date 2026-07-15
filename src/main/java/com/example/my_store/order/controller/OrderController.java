@@ -10,9 +10,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.example.my_store.order.controller.dto.ChangeOrderStatusDto;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/rest/orders")
@@ -40,20 +42,14 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<GetOrderDto> create(@RequestBody CreateOrderDto dto) {
+    public ResponseEntity<GetOrderDto> create(@RequestBody @Valid CreateOrderDto dto) {
         var entity =  orderService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(entity);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        orderService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping
-    public ResponseEntity<Void> deleteMany(@RequestParam List<Long> ids) {
-        orderService.deleteMany(ids);
+    @PatchMapping("/{id}/change-status")
+    public ResponseEntity<Void> changeOrderState(@PathVariable Long id, @RequestBody @Valid ChangeOrderStatusDto dto) {
+        orderService.changeOrderState(id, dto.status());
         return ResponseEntity.noContent().build();
     }
 }

@@ -12,8 +12,8 @@ import com.example.my_store.cart.repository.cart_item.CartItemRepository;
 import com.example.my_store.cart.repository.cart_item.entity.CartItemEntity;
 import com.example.my_store.cart.utils.CartEntityMapper;
 import com.example.my_store.cart.utils.CartItemEntityMapper;
-import com.example.my_store.product.repository.ProductRepository;
 import com.example.my_store.product.repository.entity.ProductEntity;
+import com.example.my_store.product.service.ProductService;
 import com.example.my_store.utils.exception.CommonEntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,7 +58,7 @@ class CartServiceImplTest {
     private AccountRepository accountRepository;
 
     @Mock
-    private ProductRepository productRepository;
+    private ProductService productService;
 
     @Mock
     private CartItemRepository cartItemRepository;
@@ -82,6 +82,7 @@ class CartServiceImplTest {
         product.setDescription("Игровой ноутбук");
         product.setPrice(100_000.0);
         product.setQuantity(5);
+        product.setIsActive(true);
         return product;
     }
 
@@ -218,7 +219,7 @@ class CartServiceImplTest {
         ProductEntity product = productEntity();
         CreateCartItemDto dto = new CreateCartItemDto(CART_ID, PRODUCT_ID, 3);
 
-        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(product));
+        when(productService.getRequiredActiveProduct(PRODUCT_ID)).thenReturn(product);
         when(cartRepository.findById(CART_ID)).thenReturn(Optional.of(cart));
 
         // Act: добавляем товар в корзину.
@@ -243,7 +244,7 @@ class CartServiceImplTest {
         CartItemEntity existingCartItem = cartItemEntity(cart, product, 2);
         cart.getProducts().add(existingCartItem);
 
-        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(product));
+        when(productService.getRequiredActiveProduct(PRODUCT_ID)).thenReturn(product);
         when(cartRepository.findById(CART_ID)).thenReturn(Optional.of(cart));
 
         // Act: добавляем тот же товар еще раз.
