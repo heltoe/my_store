@@ -1,12 +1,23 @@
 package com.example.my_store.delivery.controller.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
  * DTO for {@link com.example.my_store.delivery.repository.entity.DeliveryEntity}
  */
-public record GetDeliveryDto(Date createdAt, LocalDateTime updatedAt, Long id, Long orderId, Long courierId,
-                             LocalDateTime deliveryDate, String deliveryPlace, String description, Double lat,
-                             Double lon) {
+@Schema(description = "Информация о доставке")
+public record GetDeliveryDto(
+        @Schema(description = "Дата создания") Date createdAt,
+        @Schema(description = "Дата обновления") LocalDateTime updatedAt,
+        @Schema(description = "Идентификатор доставки", example = "1") Long id,
+        @Schema(description = "Идентификатор заказа", example = "1") Long orderId,
+        @Schema(description = "Идентификатор курьера", example = "1") Long courierId,
+        @Schema(description = "Дата и время доставки") LocalDateTime deliveryDate,
+        @Schema(description = "Адрес доставки", example = "ул. Примерная, д. 1") String deliveryPlace,
+        @Schema(description = "Дополнительное описание") String description,
+        @Schema(description = "Широта", example = "55.7558") Double lat,
+        @Schema(description = "Долгота", example = "37.6173") Double lon) {
 }

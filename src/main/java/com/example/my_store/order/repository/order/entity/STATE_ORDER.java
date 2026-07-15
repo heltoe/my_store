@@ -1,32 +1,21 @@
 package com.example.my_store.order.repository.order.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Статус заказа")
 public enum STATE_ORDER {
-    /**
-     * Создан
-     */
+    @Schema(description = "Создан")
     CREATED,
-    /**
-     * Подтвержден
-     */
+    @Schema(description = "Подтверждён")
     ACCEPTED,
-    /**
-     * Оплачен
-     */
+    @Schema(description = "Оплачен")
     PAID,
-    /**
-     * Ждет прикрепления к курьеру
-     */
+    @Schema(description = "Ожидает назначения курьера")
     WAIT_BIND_TO_COURIER,
-    /**
-     * В пути
-     */
+    @Schema(description = "В пути")
     DELIVERY_ON_THE_WAY,
-    /**
-     * Получен клиентом
-     */
+    @Schema(description = "Получен клиентом")
     RECEIVED_BY_USER,
-    /**
-     * Отменен
-     */
+    @Schema(description = "Отменён")
     CANCELED,
 }

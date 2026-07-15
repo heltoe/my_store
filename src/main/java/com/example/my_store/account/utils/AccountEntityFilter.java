@@ -1,11 +1,21 @@
 package com.example.my_store.account.utils;
 
 import com.example.my_store.account.repository.entity.AccountEntity;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-public record AccountEntityFilter(String phoneNumberContains, String firstNameContains, String lastNameContains,
-                                  String secondNameContains) {
+@Schema(description = "Фильтр для поиска аккаунтов")
+public record AccountEntityFilter(
+        @Schema(description = "Подстрока в номере телефона", example = "+79")
+        String phoneNumberContains,
+        @Schema(description = "Подстрока в имени", example = "Иван")
+        String firstNameContains,
+        @Schema(description = "Подстрока в фамилии", example = "Иванов")
+        String lastNameContains,
+        @Schema(description = "Подстрока в отчестве", example = "Иванович")
+        String secondNameContains
+) {
     public Specification<AccountEntity> toSpecification() {
         return phoneNumberContainsSpec()
                 .and(firstNameContainsSpec())

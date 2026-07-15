@@ -1,10 +1,17 @@
 package com.example.my_store.product.utils;
 
 import com.example.my_store.product.repository.entity.ProductEntity;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-public record ProductEntityFilter(String nameContains, Boolean isActive) {
+@Schema(description = "Фильтр для поиска товаров")
+public record ProductEntityFilter(
+        @Schema(description = "Подстрока в названии товара", example = "phone")
+        String nameContains,
+        @Schema(description = "Только активные товары (по умолчанию true)", example = "true")
+        Boolean isActive
+) {
     public Specification<ProductEntity> toSpecification() {
         return nameContainsSpec()
                 .and(isActiveSpec());
