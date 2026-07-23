@@ -30,13 +30,11 @@ public class GlobalErrorHandler {
         return buildResponseEntity(error);
     }
 
-    // Обработка ошибки ненайденного ресурса (404 Entity not found Error)
     @ExceptionHandler(CommonEntityNotFoundException.class)
     public ResponseEntity<Object> handleEntityNotFound(Exception ex) {
         return buildResponseEntity(ex, HttpStatus.NOT_FOUND, "Entity not found", "EntityNotFound error");
     }
 
-        // Обработка ошибки ненайденного ресурса (409 Conflict Error)
     @ExceptionHandler(CommonConflictException.class)
     public ResponseEntity<Object> handleConflict(Exception ex) {
         return buildResponseEntity(ex, HttpStatus.CONFLICT, "Conflict error", "Conflict error");
@@ -50,7 +48,6 @@ public class GlobalErrorHandler {
         return buildResponseEntity(ex, HttpStatus.BAD_REQUEST, "Bad request", "Validation error");
     }
 
-    // Обработка клиентских ошибок (400 Bad request Error)
     @ExceptionHandler(exception = {
             IllegalArgumentException.class,
             IllegalStateException.class
@@ -59,12 +56,10 @@ public class GlobalErrorHandler {
         return buildResponseEntity(ex, HttpStatus.BAD_REQUEST, "Bad request", "Validation error");
     }
 
-    // Обработка клиентских ошибок (400 Bad request Error)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
         log.error("Validation error: {}", ex.getMessage(), ex);
         ApiValidationError error = new ApiValidationError(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Validation failed");
-        // Собираем под-ошибки из объектов FieldError
         List<ApiValidationSubError> subErrors = ex.getBindingResult().getFieldErrors().stream()
                 .map(f -> new ApiValidationSubError(f.getField(),
                         f.getRejectedValue(), f.getDefaultMessage()))
@@ -73,7 +68,6 @@ public class GlobalErrorHandler {
         return buildResponseEntity(error);
     }
 
-    // Обработка всех остальных ошибок (500 Internal Server Error)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleAllExceptions(Exception ex) {
         return buildResponseEntity(ex, HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "Internal error");
