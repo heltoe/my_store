@@ -1,9 +1,9 @@
-package com.example.my_store.utils.exception;
+package com.example.common_lib.utils.exception;
 
-import com.example.my_store.utils.exception.dto.ApiError;
-import com.example.my_store.utils.exception.dto.BaseApiError;
-import com.example.my_store.utils.exception.dto.validation.ApiValidationError;
-import com.example.my_store.utils.exception.dto.validation.ApiValidationSubError;
+import com.example.common_lib.utils.exception.dto.ApiError;
+import com.example.common_lib.utils.exception.dto.BaseApiError;
+import com.example.common_lib.utils.exception.dto.validation.ApiValidationError;
+import com.example.common_lib.utils.exception.dto.validation.ApiValidationSubError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;

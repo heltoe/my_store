@@ -1,13 +1,12 @@
-package com.example.my_store.event;
+package com.example.common_lib.event;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public record DeliveryCreatedEvent(
+public record PaymentSucceededEvent(
         UUID eventId,
-        Long deliveryId,
+        Long paymentId,
         Long orderId,
-        Long courierId,
         Instant occurredAt
 ) {
 }

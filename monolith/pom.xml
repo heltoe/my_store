@@ -12,6 +12,7 @@
 
     <artifactId>monolith</artifactId>
     <packaging>jar</packaging>
+
     <name>monolith</name>
     <description>Temporary monolith until all domains are extracted to microservices</description>
 
@@ -19,7 +20,8 @@
         <!-- Shared library (Phase 0.1) -->
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>common-lib</artifactId>
+            <artifactId>common_lib</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
         <!-- Runtime: Spring Boot stack (from current root pom.xml) -->

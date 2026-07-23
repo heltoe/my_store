@@ -10,8 +10,9 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>common-lib</artifactId>
+    <artifactId>common_lib</artifactId>
     <packaging>jar</packaging>
+
     <name>common-lib</name>
     <description>Shared DTOs, exceptions, events and utilities for my_store microservices</description>
 

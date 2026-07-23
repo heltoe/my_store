@@ -1,4 +1,4 @@
-package com.example.my_store.kafka;
+package com.example.common_lib.kafka;
 
 public final class KafkaTopics {
 

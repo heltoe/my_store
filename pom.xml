@@ -16,10 +16,11 @@
 	<artifactId>my-store-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
+
 	<name>my-store-parent</name>
 
 	<modules>
-		<module>common-lib</module>
+		<module>common_lib</module>
 		<module>monolith</module>
 		<!-- добавлять по мере миграции: -->
 		<!-- <module>account-service</module> -->
@@ -42,7 +43,7 @@
 			<!-- внутренние модули -->
 			<dependency>
 				<groupId>com.example</groupId>
-				<artifactId>common-lib</artifactId>
+				<artifactId>common_lib</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 

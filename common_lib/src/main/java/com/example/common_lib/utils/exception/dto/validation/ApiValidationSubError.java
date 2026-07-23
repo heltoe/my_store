@@ -1,4 +1,4 @@
-package com.example.my_store.utils.exception.dto.validation;
+package com.example.common_lib.utils.exception.dto.validation;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

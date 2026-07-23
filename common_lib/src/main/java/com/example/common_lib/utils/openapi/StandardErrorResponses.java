@@ -1,6 +1,6 @@
-package com.example.my_store.utils.openapi;
+package com.example.common_lib.utils.openapi;
 
-import com.example.my_store.utils.exception.dto.ApiError;
+import com.example.common_lib.utils.exception.dto.ApiError;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

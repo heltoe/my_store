@@ -1,4 +1,4 @@
-package com.example.my_store.utils;
+package com.example.common_lib.utils;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
