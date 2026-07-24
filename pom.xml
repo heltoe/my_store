@@ -29,6 +29,7 @@
 		<module>delivery_service</module>
 		<module>order_service</module>
 		<module>payment_service</module>
+		<module>bom_dependencies</module>
 	</modules>
 
 	<properties>
