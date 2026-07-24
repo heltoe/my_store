@@ -50,6 +50,13 @@
 				<version>${project.version}</version>
 			</dependency>
 
+			<dependency>
+				<groupId>com.example</groupId>
+				<artifactId>bom_dependencies</artifactId>
+				<version>${project.version}</version>
+				<type>pom</type>
+			</dependency>
+
 			<!-- Spring Cloud BOM (для api-gateway) -->
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>

@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>bom_dependencies</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>Bom dependencies</name>
     <description>Share common dependencies on microservices</description>
