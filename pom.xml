@@ -22,11 +22,13 @@
 	<modules>
 		<module>common_lib</module>
 		<module>monolith</module>
-		<!-- добавлять по мере миграции: -->
-		<!-- <module>account-service</module> -->
-		<!-- <module>courier-service</module> -->
-		<!-- <module>api-gateway</module> -->
-		<!-- ... -->
+		<module>account_service</module>
+		<module>courier_service</module>
+		<module>products_service</module>
+		<module>cart_service</module>
+		<module>delivery_service</module>
+		<module>order_service</module>
+		<module>payment_service</module>
 	</modules>
 
 	<properties>
@@ -78,8 +80,16 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+            <version>2.2.43</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 
-	<build>
+    <build>
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -105,5 +115,15 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>16</source>
+					<target>16</target>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 </project>
