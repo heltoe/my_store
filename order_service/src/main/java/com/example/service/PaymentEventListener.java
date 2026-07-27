@@ -4,6 +4,7 @@ import com.example.common_lib.dto.STATE_ORDER;
 import com.example.common_lib.event.PaymentSucceededEvent;
 import com.example.common_lib.kafka.KafkaTopics;
 import com.example.common_lib.utils.exception.CommonConflictException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
