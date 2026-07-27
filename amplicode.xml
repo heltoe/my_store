@@ -3,4 +3,48 @@
   <component name="AmplicodeJpaPluginProjectSettings">
     <option name="lastSelectedLanguage" value="Java" />
   </component>
+  <component name="AmplicodePersistenceUnitSettings">
+    <persistence-units>
+      <persistence-unit moduleName="account_service" name="Default">
+        <packages>
+          <package value="com.example" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit moduleName="common_lib" name="Default">
+        <packages>
+          <package value="com.example.common_lib.config" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit moduleName="courier_service" name="Default">
+        <packages>
+          <package value="com.example" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit moduleName="products_service" name="Default">
+        <packages>
+          <package value="com.example" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit moduleName="cart_service" name="Default">
+        <packages>
+          <package value="com.example" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit moduleName="delivery_service" name="Default">
+        <packages>
+          <package value="com.example" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit moduleName="order_service" name="Default">
+        <packages>
+          <package value="com.example" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit moduleName="payment_service" name="Default">
+        <packages>
+          <package value="com.example" />
+        </packages>
+      </persistence-unit>
+    </persistence-units>
+  </component>
 </project>
