@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    discovery:
+      enabled: false
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: account-service
+              uri: ${GATEWAY_ACCOUNT_URI:http://localhost:8081}
+              predicates:
+                - Path=/rest/accounts/**
+            - id: products-service
+              uri: ${GATEWAY_PRODUCTS_URI:http://localhost:8082}
+              predicates:
+                - Path=/rest/products/**
+            - id: cart-service
+              uri: ${GATEWAY_CART_URI:http://localhost:8083}
+              predicates:
+                - Path=/rest/carts/**
+            - id: order-service
+              uri: ${GATEWAY_ORDER_URI:http://localhost:8084}
+              predicates:
+                - Path=/rest/orders/**
+            - id: payment-service
+              uri: ${GATEWAY_PAYMENT_URI:http://localhost:8085}
+              predicates:
+                - Path=/rest/payments/**
+            - id: courier-service
+              uri: ${GATEWAY_COURIER_URI:http://localhost:8086}
+              predicates:
+                - Path=/rest/couriers/**
+            - id: delivery-service
+              uri: ${GATEWAY_DELIVERY_URI:http://localhost:8087}
+              predicates:
+                - Path=/rest/deliveries/**
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true

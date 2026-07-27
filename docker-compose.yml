@@ -1,0 +1,388 @@
+x-postgres-healthcheck: &postgres-healthcheck
+  test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+  interval: 5s
+  timeout: 5s
+  retries: 10
+  start_period: 10s
+
+x-spring-healthcheck: &spring-healthcheck
+  interval: 15s
+  timeout: 5s
+  retries: 10
+  start_period: 90s
+
+services:
+  account-db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: account_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - account_db_data:/var/lib/postgresql/data
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *postgres-healthcheck
+
+  product-db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - product_db_data:/var/lib/postgresql/data
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *postgres-healthcheck
+
+  cart-db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cart_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5435:5432"
+    volumes:
+      - cart_db_data:/var/lib/postgresql/data
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *postgres-healthcheck
+
+  order-db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5436:5432"
+    volumes:
+      - order_db_data:/var/lib/postgresql/data
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *postgres-healthcheck
+
+  payment-db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5437:5432"
+    volumes:
+      - payment_db_data:/var/lib/postgresql/data
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *postgres-healthcheck
+
+  courier-db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: courier_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5438:5432"
+    volumes:
+      - courier_db_data:/var/lib/postgresql/data
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *postgres-healthcheck
+
+  delivery-db:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: delivery_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5439:5432"
+    volumes:
+      - delivery_db_data:/var/lib/postgresql/data
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *postgres-healthcheck
+
+  kafka:
+    image: apache/kafka:3.7.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      - my-store-net
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:29092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "9091:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - my-store-net
+
+  account-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: account_service
+    environment:
+      POSTGRES_HOST: account-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: account_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      account-db:
+        condition: service_healthy
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD-SHELL", "curl -sf http://localhost:8081/actuator/health || exit 1"]
+
+  products-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: products_service
+    environment:
+      POSTGRES_HOST: product-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: product_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      product-db:
+        condition: service_healthy
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD-SHELL", "curl -sf http://localhost:8082/actuator/health || exit 1"]
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: cart_service
+    environment:
+      POSTGRES_HOST: cart-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: cart_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SERVICES_ACCOUNT: http://account-service:8081
+      SERVICES_PRODUCTS: http://products-service:8082
+    depends_on:
+      cart-db:
+        condition: service_healthy
+      account-service:
+        condition: service_healthy
+      products-service:
+        condition: service_healthy
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/actuator/health || exit 1"]
+
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: order_service
+    environment:
+      POSTGRES_HOST: order-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: order_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_ACCOUNT: http://account-service:8081
+      SERVICES_PRODUCTS: http://products-service:8082
+    depends_on:
+      order-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      account-service:
+        condition: service_healthy
+      products-service:
+        condition: service_healthy
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD-SHELL", "curl -sf http://localhost:8084/actuator/health || exit 1"]
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: payment_service
+    environment:
+      POSTGRES_HOST: payment-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_ORDER: http://order-service:8084
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD-SHELL", "curl -sf http://localhost:8085/actuator/health || exit 1"]
+
+  courier-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: courier_service
+    environment:
+      POSTGRES_HOST: courier-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: courier_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SERVICES_DELIVERY: http://delivery-service:8087
+    depends_on:
+      courier-db:
+        condition: service_healthy
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD-SHELL", "curl -sf http://localhost:8086/actuator/health || exit 1"]
+
+  delivery-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: delivery_service
+    environment:
+      POSTGRES_HOST: delivery-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: delivery_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SERVICES_ORDER: http://order-service:8084
+      SERVICES_COURIER: http://courier-service:8086
+    depends_on:
+      delivery-db:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      courier-service:
+        condition: service_healthy
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD-SHELL", "curl -sf http://localhost:8087/actuator/health || exit 1"]
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: api_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      GATEWAY_ACCOUNT_URI: http://account-service:8081
+      GATEWAY_PRODUCTS_URI: http://products-service:8082
+      GATEWAY_CART_URI: http://cart-service:8083
+      GATEWAY_ORDER_URI: http://order-service:8084
+      GATEWAY_PAYMENT_URI: http://payment-service:8085
+      GATEWAY_COURIER_URI: http://courier-service:8086
+      GATEWAY_DELIVERY_URI: http://delivery-service:8087
+    depends_on:
+      account-service:
+        condition: service_healthy
+      products-service:
+        condition: service_healthy
+      cart-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      courier-service:
+        condition: service_healthy
+      delivery-service:
+        condition: service_healthy
+    networks:
+      - my-store-net
+    healthcheck:
+      <<: *spring-healthcheck
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+
+networks:
+  my-store-net:
+    driver: bridge
+
+volumes:
+  account_db_data:
+  product_db_data:
+  cart_db_data:
+  order_db_data:
+  payment_db_data:
+  courier_db_data:
+  delivery_db_data:
