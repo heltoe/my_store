@@ -94,3 +94,15 @@ src/main/java/com/example/my_store/
 ```
 
 В каждом домене: `controller`, `service`, `repository` (+ DTO и мапперы).
+
+
+## Запуск kafk:
+
+```bash
+docker compose -f docker-compose-pg.yml up -d kafka
+```
+
+# или с UI:
+```bash
+docker compose -f docker-compose-pg.yml up -d kafka kafka-ui
+```bash

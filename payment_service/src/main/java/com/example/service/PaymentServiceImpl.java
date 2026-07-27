@@ -1,6 +1,5 @@
 package com.example.service;
 
-import com.example.common_lib.dto.GetDeliveryDto;
 import com.example.common_lib.dto.GetOrderDto;
 import com.example.common_lib.dto.STATE_ORDER;
 import com.example.controller.dto.CreatePaymentDto;
@@ -32,6 +31,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
 
+    private final PaymentEventPublisher paymentEventPublisher;
+
     public GetOrderDto getRequiredOrder(Long id) {
         return webClient
                 .get()
@@ -48,7 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private PaymentEntity getRequiredPaymentByOrderId(Long orderId) {
-        return paymentRepository.findByOrder_Id(orderId).orElseThrow(() ->
+        return paymentRepository.findByOrderId(orderId).orElseThrow(() ->
                 new CommonEntityNotFoundException("Payment for order with id `%s` not found".formatted(orderId)));
     }
 
@@ -96,7 +97,7 @@ public class PaymentServiceImpl implements PaymentService {
         GetOrderDto orderEntity = getRequiredOrder(dto.orderId());
         throwIfOrderStatusIsNot(orderEntity.stateOrder(), STATE_ORDER.ACCEPTED);
 
-        Optional<PaymentEntity> existingPayment = paymentRepository.findByOrder_Id(dto.orderId());
+        Optional<PaymentEntity> existingPayment = paymentRepository.findByOrderId(dto.orderId());
         if (existingPayment.isPresent()) {
             throw new CommonConflictException("Payment for order with id `%s` already exists".formatted(dto.orderId()));
         }
@@ -114,8 +115,9 @@ public class PaymentServiceImpl implements PaymentService {
         throwIfPaymentStatusIsNot(entity.getStatus(), STATE_PAYMENT.PENDING);
         entity.setStatus(STATE_PAYMENT.SUCCESS);
         PaymentEntity resultPaymentEntity = paymentRepository.save(entity);
-//        TODO: add kafka
-//        orderService.changeOrderState(entity.getOrder().getId(), STATE_ORDER.PAID);
+
+        paymentEventPublisher.publishPaymentSucceeded(resultPaymentEntity);
+
         return paymentEntityMapper.convertToGetPaymentDto(resultPaymentEntity);
     }
 
