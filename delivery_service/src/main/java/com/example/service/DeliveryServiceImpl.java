@@ -1,6 +1,8 @@
 package com.example.service;
 
+import com.example.common_lib.config.ServiceUrlsProperties;
 import com.example.common_lib.dto.GetCourierDto;
+import com.example.common_lib.dto.STATE_ORDER;
 import com.example.common_lib.dto.GetOrderDto;
 import com.example.common_lib.dto.GetDeliveryDto;
 import com.example.controller.dto.CreateDeliveryDto;
@@ -28,6 +30,8 @@ import java.util.Optional;
 public class DeliveryServiceImpl implements DeliveryService {
     private final WebClient webClient;
 
+    private final ServiceUrlsProperties serviceUrls;
+
     private final DeliveryEntityMapper deliveryEntityMapper;
 
     private final DeliveryRepository deliveryRepository;
@@ -35,7 +39,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public GetOrderDto getRequiredOrder(Long id) {
         return webClient
                 .get()
-                .uri(":8080/rest/orders/{id}", id)
+                .uri(serviceUrls.getOrder() + "/rest/orders/{id}", id)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new CommonEntityNotFoundException("Order with id `%s` not found".formatted(id))))
                 .bodyToMono(GetOrderDto.class)
@@ -45,7 +49,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public GetCourierDto getRequiredCourier(Long id) {
         return webClient
                 .get()
-                .uri(":8080/rest/couriers/{id}", id)
+                .uri(serviceUrls.getCourier() + "/rest/couriers/{id}", id)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new CommonEntityNotFoundException("Courier with id `%s` not found".formatted(id))))
                 .bodyToMono(GetCourierDto.class)
@@ -80,7 +84,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     @Override
     public GetDeliveryDto create(CreateDeliveryDto dto) {
         getRequiredOrder(dto.orderId());
-        Optional<DeliveryEntity> findDeliveryByIdOrder = deliveryRepository.findByOrder_Id(dto.orderId());
+        Optional<DeliveryEntity> findDeliveryByIdOrder = deliveryRepository.findByOrderId(dto.orderId());
         if (findDeliveryByIdOrder.isPresent()) {
             throw new CommonConflictException( "Delivery for order with id `%s` already exists".formatted(dto.orderId()));
         }
@@ -106,6 +110,15 @@ public class DeliveryServiceImpl implements DeliveryService {
         DeliveryEntity resultDeliveryEntity = deliveryRepository.save(entity);
 
         return deliveryEntityMapper.convertToGetDeliveryDto(resultDeliveryEntity);
+    }
+
+
+    @Override
+    public boolean hasDeliveryOnTheWay(Long courierId) {
+        return deliveryRepository.findByCourierId(courierId).stream()
+                .map(DeliveryEntity::getOrderId)
+                .map(this::getRequiredOrder)
+                .anyMatch(order -> order.stateOrder() == STATE_ORDER.DELIVERY_ON_THE_WAY);
     }
 
     @Override

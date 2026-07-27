@@ -15,10 +15,10 @@ import lombok.RequiredArgsConstructor;
 public class PaymentEventListener {
     private final OrderService orderService;
 
-    @KafkaListener(topics = KafkaTopics.PAYMENT_SUCCEEDED, groupId = "order-service")
+    @KafkaListener(topics = KafkaTopics.PAYMENT_SUCCEEDED, groupId = "${spring.kafka.consumer.group-id}")
     public void onPaymentSucceeded(PaymentSucceededEvent event) {
         try {
-            log.info("Received payment.succeeded: orderId=${}, paymentId={}", event.orderId(), event.paymentId());
+            log.info("Received payment.succeeded: orderId={}, paymentId={}", event.orderId(), event.paymentId());
             orderService.changeOrderState(event.orderId(), STATE_ORDER.PAID);
         } catch (CommonConflictException e) {
             log.warn("Skip duplicate or invalid transition for orderId={}: {}", event.orderId(), e.getMessage());

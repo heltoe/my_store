@@ -7,5 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.Optional;
 
 public interface DeliveryRepository extends JpaRepository<DeliveryEntity, Long>, JpaSpecificationExecutor<DeliveryEntity> {
-    Optional<DeliveryEntity> findByOrder_Id(Long id);
+    Optional<DeliveryEntity> findByOrderId(Long orderId);
+
+    java.util.List<DeliveryEntity> findByCourierId(Long courierId);
 }

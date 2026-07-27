@@ -1,5 +1,6 @@
 package com.example.service;
 
+import com.example.common_lib.config.ServiceUrlsProperties;
 import com.example.common_lib.dto.GetAccountDto;
 import com.example.common_lib.dto.GetProductDto;
 import com.example.common_lib.dto.GetOrderDto;
@@ -29,6 +30,8 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
     private final WebClient webClient;
 
+    private final ServiceUrlsProperties serviceUrls;
+
     private final OrderEntityMapper orderEntityMapper;
 
     private final OrderItemEntityMapper orderItemEntityMapper;
@@ -42,7 +45,7 @@ public class OrderServiceImpl implements OrderService {
     public GetAccountDto getRequiredAccount(Long id) {
         return webClient
                 .get()
-                .uri(":8080/rest/accounts/{id}", id)
+                .uri(serviceUrls.getAccount() + "/rest/accounts/{id}", id)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new CommonEntityNotFoundException("Account with id `%s` not found".formatted(id))))
                 .bodyToMono(GetAccountDto.class)
@@ -52,7 +55,7 @@ public class OrderServiceImpl implements OrderService {
     public GetProductDto getRequiredProduct(Long id) {
         return webClient
                 .get()
-                .uri(":8080/rest/products/{id}", id)
+                .uri(serviceUrls.getProducts() + "/rest/products/{id}", id)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new CommonEntityNotFoundException("Product with id `%s` not found".formatted(id))))
                 .bodyToMono(GetProductDto.class)
@@ -111,6 +114,7 @@ public class OrderServiceImpl implements OrderService {
         return orderEntityMapper.convertToGetOrderDto(resultOrderEntity);
     }
 
+    @Transactional
     @Override
     public void changeOrderState(Long idOrder, STATE_ORDER status) {
         OrderEntity entity = getRequiredOrder(idOrder);

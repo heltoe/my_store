@@ -46,11 +46,6 @@
             <artifactId>kafka</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -59,7 +54,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.example.order_service.Main</mainClass>
+                    <mainClass>com.example.Main</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

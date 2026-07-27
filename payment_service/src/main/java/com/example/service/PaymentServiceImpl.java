@@ -1,5 +1,6 @@
 package com.example.service;
 
+import com.example.common_lib.config.ServiceUrlsProperties;
 import com.example.common_lib.dto.GetOrderDto;
 import com.example.common_lib.dto.STATE_ORDER;
 import com.example.controller.dto.CreatePaymentDto;
@@ -11,6 +12,7 @@ import com.example.utils.PaymentEntityMapper;
 import com.example.common_lib.utils.exception.CommonConflictException;
 import com.example.common_lib.utils.exception.CommonEntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,16 +29,18 @@ import java.util.Optional;
 public class PaymentServiceImpl implements PaymentService {
     private final WebClient webClient;
 
+    private final ServiceUrlsProperties serviceUrls;
+
     private final PaymentEntityMapper paymentEntityMapper;
 
     private final PaymentRepository paymentRepository;
 
-    private final PaymentEventPublisher paymentEventPublisher;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public GetOrderDto getRequiredOrder(Long id) {
         return webClient
                 .get()
-                .uri(":8080/rest/orders/{id}", id)
+                .uri(serviceUrls.getOrder() + "/rest/orders/{id}", id)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new CommonEntityNotFoundException("Order with id `%s` not found".formatted(id))))
                 .bodyToMono(GetOrderDto.class)
@@ -116,7 +120,7 @@ public class PaymentServiceImpl implements PaymentService {
         entity.setStatus(STATE_PAYMENT.SUCCESS);
         PaymentEntity resultPaymentEntity = paymentRepository.save(entity);
 
-        paymentEventPublisher.publishPaymentSucceeded(resultPaymentEntity);
+        applicationEventPublisher.publishEvent(new PaymentMarkedSuccessEvent(resultPaymentEntity));
 
         return paymentEntityMapper.convertToGetPaymentDto(resultPaymentEntity);
     }

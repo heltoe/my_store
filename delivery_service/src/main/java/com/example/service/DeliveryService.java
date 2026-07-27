@@ -21,4 +21,6 @@ public interface DeliveryService {
     GetDeliveryDto patch(Long id, UpdateDeliveryDto dto);
 
     void delete(Long id);
+
+    boolean hasDeliveryOnTheWay(Long courierId);
 }

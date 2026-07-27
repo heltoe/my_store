@@ -1,5 +1,6 @@
 package com.example.service;
 
+import com.example.common_lib.config.ServiceUrlsProperties;
 import com.example.common_lib.utils.exception.CommonConflictException;
 import com.example.controller.dto.cart.CreateCartDto;
 import com.example.controller.dto.cart.GetCartDto;
@@ -31,6 +32,8 @@ import java.util.Optional;
 public class CartServiceImpl implements CartService {
     private final WebClient webClient;
 
+    private final ServiceUrlsProperties serviceUrls;
+
     private final CartEntityMapper cartEntityMapper;
 
     private final CartItemEntityMapper cartItemEntityMapper;
@@ -46,7 +49,7 @@ public class CartServiceImpl implements CartService {
     public GetAccountDto getRequiredAccount(Long id) {
         return webClient
                 .get()
-                .uri(":8080/rest/accounts/{id}", id)
+                .uri(serviceUrls.getAccount() + "/rest/accounts/{id}", id)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new CommonEntityNotFoundException("Account with id `%s` not found".formatted(id))))
                 .bodyToMono(GetAccountDto.class)
@@ -56,7 +59,7 @@ public class CartServiceImpl implements CartService {
     public GetProductDto getRequiredProduct(Long id) {
         return webClient
                 .get()
-                .uri(":8080/rest/products/{id}", id)
+                .uri(serviceUrls.getProducts() + "/rest/products/{id}", id)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new CommonEntityNotFoundException("Product with id `%s` not found".formatted(id))))
                 .bodyToMono(GetProductDto.class)

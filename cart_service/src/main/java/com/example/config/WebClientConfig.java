@@ -14,11 +14,10 @@ import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class WebClientConfig {
-    private static final String BASE_URL = "http://localhost";
     public static final int TIMEOUT = 1000;
 
     @Bean
-    public WebClient webClientWithTimeout() {
+    public WebClient webClient() {
         final var tcpClient = TcpClient
                 .create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, TIMEOUT)
@@ -28,7 +27,6 @@ public class WebClientConfig {
                 });
 
         return WebClient.builder()
-                .baseUrl(BASE_URL)
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.from(tcpClient)))
                 .build();
     }

@@ -84,6 +84,16 @@ public class DeliveryController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
+
+    @Operation(summary = "Проверить, есть ли у курьера доставка в пути")
+    @ApiResponse(responseCode = "200", description = "Результат проверки")
+    @StandardErrorResponses
+    @GetMapping("/courier/{courierId}/on-the-way")
+    public ResponseEntity<Boolean> hasDeliveryOnTheWay(
+            @Parameter(description = "Идентификатор курьера", example = "1") @PathVariable Long courierId) {
+        return ResponseEntity.ok(deliveryService.hasDeliveryOnTheWay(courierId));
+    }
+
     @Operation(summary = "Удалить доставку")
     @ApiResponse(responseCode = "204", description = "Доставка удалена")
     @StandardErrorResponses

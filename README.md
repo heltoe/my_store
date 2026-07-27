@@ -36,7 +36,7 @@ OpenAPI-описание: **My Store API**. Авторизация отсутс�
 
 ### 1. Переменные окружения
 
-Создайте файл `.env` в корне проекта (импорт: `spring.config.import=file:.env[.properties]`):
+**Postgres** — файл `.env` в корне проекта:
 
 ```env
 POSTGRES_HOST=localhost
@@ -46,6 +46,23 @@ POSTGRES_DATABASE=my_store
 POSTGRES_LOCAL_PORT=5433
 POSTGRES_DOCKER_PORT=5432
 ```
+
+**URL микросервисов** — общий файл `common_lib/.env` (шаблон: `common_lib/.env.example`):
+
+```bash
+cp common_lib/.env.example common_lib/.env
+```
+
+```env
+services.account.url=http://localhost:8081
+services.order.url=http://localhost:8084
+# ... остальные services.*.url
+```
+
+Для Docker переопределите hostnames, например `services.order.url=http://order-service:8084`.
+
+Микросервисы подключают конфиг через `spring.config.import`:
+`classpath:application-services.properties` → `common_lib/.env` → корневой `.env`.
 
 ### 2. База данных
 
@@ -96,13 +113,41 @@ src/main/java/com/example/my_store/
 В каждом домене: `controller`, `service`, `repository` (+ DTO и мапперы).
 
 
-## Запуск kafk:
+## Микросервисы
+
+Проект содержит 7 микросервисов + монолит. Порты по умолчанию:
+
+| Сервис | Порт | API |
+|--------|------|-----|
+| account-service | 8081 | `/rest/accounts` |
+| products-service | 8082 | `/rest/products` |
+| cart-service | 8083 | `/rest/carts` |
+| order-service | 8084 | `/rest/orders` |
+| payment-service | 8085 | `/rest/payments` |
+| courier-service | 8086 | `/rest/couriers` |
+| delivery-service | 8087 | `/rest/deliveries` |
+| monolith | 8080 | все домены |
+
+Запуск отдельного сервиса (из **корня** проекта):
 
 ```bash
-docker compose -f docker-compose-pg.yml up -d kafka
+./mvnw -pl payment_service spring-boot:run
 ```
 
-# или с UI:
+## Kafka
+
 ```bash
-docker compose -f docker-compose-pg.yml up -d kafka kafka-ui
+docker compose -f docker-compose-kafka.yml up -d
+```
+
+С UI:
+
 ```bash
+docker compose -f docker-compose-kafka.yml up -d kafka kafka-ui
+```
+
+Kafka UI: http://localhost:9091
+
+Переменная окружения (опционально): `KAFKA_BOOTSTRAP_SERVERS=localhost:9092`
+
+Flow: `payment-service` публикует `payment.succeeded` → `order-service` переводит заказ в `PAID`.
