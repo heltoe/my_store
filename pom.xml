@@ -21,7 +21,6 @@
 
 	<modules>
 		<module>common_lib</module>
-		<module>monolith</module>
 		<module>account_service</module>
 		<module>courier_service</module>
 		<module>products_service</module>
