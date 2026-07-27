@@ -11,7 +11,8 @@
 - [ ] **Фаза 3:** вынести cart-service с HTTP-зависимостями на account и product
 - [ ] **Фаза 4:** вынести order-service и payment-service, внедрить Kafka (топик payment.succeeded) для асинхронной смены статуса заказа
 - [ ] **Фаза 5:** вынести delivery-service, подключить к order и courier через HTTP, опционально событие delivery.created в Kafka
-- [ ] **Фаза 6:** удалить монолит, собрать единый docker-compose (7 сервисов + 7 БД + Kafka + Gateway), прогнать contract/integration тесты
+- [x] **Фаза 6 (частично):** монолит удалён, `docker-compose-databases.yml` (7 БД), Kafka, локальные скрипты запуска
+- [ ] **Фаза 6 (осталось):** API Gateway, единый docker-compose с приложениями, contract/integration тесты, Flyway
 
 ---
 
