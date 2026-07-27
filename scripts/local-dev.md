@@ -1,22 +1,55 @@
 # Локальный полный стенд (7 микросервисов + gateway)
 
-## Вариант 1: Docker full stack
+## Сервисы и порты
+
+| Сервис | Порт | API | БД (порт PG) |
+|--------|------|-----|--------------|
+| **api-gateway** | **8080** | прокси `/rest/**` | — |
+| account-service | 8081 | `/rest/accounts` | account_db (5433) |
+| products-service | 8082 | `/rest/products` | product_db (5434) |
+| cart-service | 8083 | `/rest/carts` | cart_db (5435) |
+| order-service | 8084 | `/rest/orders` | order_db (5436) |
+| payment-service | 8085 | `/rest/payments` | payment_db (5437) |
+| courier-service | 8086 | `/rest/couriers` | courier_db (5438) |
+| delivery-service | 8087 | `/rest/deliveries` | delivery_db (5439) |
+
+---
+
+## Вариант 1: Docker full stack (рекомендуется)
 
 ```bash
 cp .env.example .env
-# отредактируйте POSTGRES_PASSWORD
-
-docker compose up -d --build
+# задайте POSTGRES_PASSWORD
 ```
 
-Дождитесь healthy-статуса всех сервисов (~2–3 мин):
+Первый запуск — сборка образов (5–10 мин), дальше быстрее:
+
+```bash
+DOCKER_BUILDKIT=1 docker compose build
+docker compose up -d
+```
+
+После изменений в `pom.xml` или Dockerfile пересоберите образы:
+
+```bash
+DOCKER_BUILDKIT=1 docker compose build
+docker compose up -d --force-recreate
+```
+
+Дождитесь `healthy` у всех сервисов (~2–3 мин после сборки):
 
 ```bash
 docker compose ps
 curl http://localhost:8080/actuator/health
 ```
 
-Happy-path ниже выполняйте через **gateway :8080** (Swagger на отдельных портах в Docker недоступен с хоста — только gateway).
+Happy-path ниже выполняйте через **gateway :8080**. Swagger на отдельных портах в Docker с хоста недоступен — только gateway.
+
+| Что | URL |
+|-----|-----|
+| CRUD через gateway | http://localhost:8080/rest/accounts … /rest/deliveries |
+| Health gateway | http://localhost:8080/actuator/health |
+| Kafka UI | http://localhost:9091 |
 
 Остановка: `docker compose down`
 
@@ -28,7 +61,7 @@ Happy-path ниже выполняйте через **gateway :8080** (Swagger �
 
 ```bash
 cp .env.example .env
-# отредактируйте POSTGRES_PASSWORD
+# задайте POSTGRES_PASSWORD (тот же будет в .env сервисов)
 
 docker compose -f docker-compose-databases.yml up -d
 docker compose -f docker-compose-kafka.yml up -d
@@ -43,6 +76,16 @@ done
 ```
 
 В каждом `{service}/.env` задайте `POSTGRES_PASSWORD` (тот же, что в корневом `.env`).
+
+Дополнительно (уже есть в `.env.example`, при необходимости поправьте):
+
+| Сервис | Переменные |
+|--------|------------|
+| cart, order | `services.account`, `services.products` |
+| payment, delivery | `services.order` |
+| courier | `services.delivery` |
+| delivery | `services.courier` |
+| order, payment | `KAFKA_BOOTSTRAP_SERVERS=localhost:9092` |
 
 ### 3. Запуск приложений
 
@@ -87,33 +130,24 @@ curl -s -X POST http://localhost:8080/rest/accounts \
 |--------|------------|
 | account | http://localhost:8081/swagger-ui.html |
 | products | http://localhost:8082/swagger-ui.html |
-| … | … |
+| cart | http://localhost:8083/swagger-ui.html |
+| order | http://localhost:8084/swagger-ui.html |
+| payment | http://localhost:8085/swagger-ui.html |
+| courier | http://localhost:8086/swagger-ui.html |
 | delivery | http://localhost:8087/swagger-ui.html |
 
 ## Kafka UI
 
 http://localhost:9091 — топик `payment.succeeded` после успешной оплаты.
 
-## Маппинг БД
-
-| Сервис | POSTGRES_PORT | POSTGRES_DB |
-|--------|---------------|-------------|
-| account | 5433 | account_db |
-| products | 5434 | product_db |
-| cart | 5435 | cart_db |
-| order | 5436 | order_db |
-| payment | 5437 | payment_db |
-| courier | 5438 | courier_db |
-| delivery | 5439 | delivery_db |
-
 ## Маршруты gateway
 
-| Predicate | Backend (Docker) |
-|-----------|------------------|
-| `/rest/accounts/**` | account-service:8081 |
-| `/rest/products/**` | products-service:8082 |
-| `/rest/carts/**` | cart-service:8083 |
-| `/rest/orders/**` | order-service:8084 |
-| `/rest/payments/**` | payment-service:8085 |
-| `/rest/couriers/**` | courier-service:8086 |
-| `/rest/deliveries/**` | delivery-service:8087 |
+| Predicate | Backend (Docker) | Backend (Maven) |
+|-----------|------------------|-----------------|
+| `/rest/accounts/**` | account-service:8081 | localhost:8081 |
+| `/rest/products/**` | products-service:8082 | localhost:8082 |
+| `/rest/carts/**` | cart-service:8083 | localhost:8083 |
+| `/rest/orders/**` | order-service:8084 | localhost:8084 |
+| `/rest/payments/**` | payment-service:8085 | localhost:8085 |
+| `/rest/couriers/**` | courier-service:8086 | localhost:8086 |
+| `/rest/deliveries/**` | delivery-service:8087 | localhost:8087 |
