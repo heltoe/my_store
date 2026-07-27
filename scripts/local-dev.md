@@ -17,9 +17,13 @@
 
 ## Вариант 1: Docker full stack (рекомендуется)
 
+Пароль Postgres по умолчанию для локальной разработки: `123456` (задаётся в compose, если нет `.env`).
+
+Опционально — свой пароль через `.env`:
+
 ```bash
-cp .env.example .env
-# задайте POSTGRES_PASSWORD
+cp .env.example .env   # Windows: copy .env.example .env
+# при необходимости измените POSTGRES_PASSWORD
 ```
 
 Первый запуск — сборка образов (5–10 мин), дальше быстрее:
@@ -27,6 +31,17 @@ cp .env.example .env
 ```bash
 DOCKER_BUILDKIT=1 docker compose build
 docker compose up -d
+```
+
+### Windows
+
+- Запускайте команды из каталога с `docker-compose.yml` (корень репозитория).
+- Файл `.env` не попадает в git — создайте его из `.env.example` или используйте пароль по умолчанию `123456`.
+- Если БД уже падала с ошибкой «superuser password is not specified», удалите старые volumes и поднимите заново:
+
+```bash
+docker compose down -v
+docker compose up -d --build
 ```
 
 После изменений в `pom.xml` или Dockerfile пересоберите образы:
