@@ -40,7 +40,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.example.courier_service.Main</mainClass>
+                    <mainClass>com.example.delivery_service.Main</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

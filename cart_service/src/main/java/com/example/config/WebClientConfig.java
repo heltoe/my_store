@@ -1,4 +1,4 @@
-package com.example.utils;
+package com.example.config;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
